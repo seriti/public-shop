@@ -5,22 +5,26 @@ use Seriti\Tools\Table;
 
 class AccountOrderItem extends Table 
 {
+    protected $table_prefix = TABLE_PREFIX_SHOP;
+
     //configure
     public function setup($param = []) 
     {
-        $param = ['row_name'=>'Item','col_label'=>'name','pop_up'=>true];
-        parent::setup($param);        
+        if(isset($param['table_prefix'])) $this->table_prefix = $param['table_prefix'];
+
+        $table_param = ['row_name'=>'Item','col_label'=>'name','pop_up'=>true];
+        parent::setup($table_param);        
                        
         //NB: specify master table relationship
-        $this->setupMaster(array('table'=>TABLE_PREFIX_SHOP.'order','key'=>'order_id','child_col'=>'order_id', 
-                                 'show_sql'=>'SELECT CONCAT("Order ID[",order_id,"] created-",date_create) FROM '.TABLE_PREFIX_SHOP.'order WHERE order_id = "{KEY_VAL}" '));  
+        $this->setupMaster(array('table'=>$this->table_prefix.'order','key'=>'order_id','child_col'=>'order_id', 
+                                 'show_sql'=>'SELECT CONCAT("Order ID[",order_id,"] created-",date_create) FROM '.$this->table_prefix.'order WHERE order_id = "{KEY_VAL}" '));  
 
         
         $access['read_only'] = true;                         
         $this->modifyAccess($access);
 
         $this->addTableCol(array('id'=>'item_id','type'=>'INTEGER','title'=>'Item ID','key'=>true,'key_auto'=>true,'list'=>false));
-        $this->addTableCol(array('id'=>'product_id','type'=>'INTEGER','title'=>'Item','join'=>'name FROM '.TABLE_PREFIX_SHOP.'product WHERE product_id'));
+        $this->addTableCol(array('id'=>'product_id','type'=>'INTEGER','title'=>'Item')); //'join'=>'name FROM '.$this->table_prefix.'product WHERE product_id'
         $this->addTableCol(array('id'=>'quantity','type'=>'INTEGER','title'=>'Quantity'));
         $this->addTableCol(array('id'=>'options','type'=>'TEXT','title'=>'Options'));
         $this->addTableCol(array('id'=>'price','type'=>'DECIMAL','title'=>'Price'));
@@ -30,7 +34,17 @@ class AccountOrderItem extends Table
         $this->addTableCol(array('id'=>'total','type'=>'DECIMAL','title'=>'Total'));
 
         //$this->addSearch(array('notes','date'),array('rows'=>1));
-    }    
+    } 
+
+    protected function modifyRowValue($col_id,$data,&$value)
+    {
+        if($col_id === 'product_id') {
+            $product_id = $value;
+            $s3 = $this->getContainer('s3');
+
+            $value = Helpers::getProductSummary($this->db,$this->table_prefix,$s3,$product_id);
+        }
+    }   
 }
 
 ?>

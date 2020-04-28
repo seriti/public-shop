@@ -37,8 +37,8 @@ class Config
                 
         define('MODULE_ID','SHOP');
         define('MODULE_LOGO','<span class="glyphicon glyphicon-shopping-cart"></span> ');
-        define('MODULE_PAGE',URL_CLEAN_LAST);      
-        
+        define('MODULE_PAGE',URL_CLEAN_LAST);   
+       
         //define('MODULE_NAV',$menu->buildNav($module['route_list'],MODULE_PAGE));
         $submenu_html = $menu->buildNav($module['route_list'],MODULE_PAGE);
         $this->container->view->addAttribute('sub_menu',$submenu_html);

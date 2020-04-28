@@ -30,6 +30,7 @@ class CheckoutWizard extends Wizard
         $this->user = $this->getContainer('user');
         $this->temp_token = $this->user->getTempToken();
 
+        //will return 0 if NO logged in user
         $this->user_id = $this->user->getId();
 
         $param['bread_crumbs'] = true;
@@ -71,7 +72,7 @@ class CheckoutWizard extends Wizard
             $ship_location_id = $this->form['ship_location_id'];
             $pay_option_id = $this->form['pay_option_id'];
 
-            $output = Helpers::calcCartTotals($this->db,TABLE_PREFIX_SHOP,$this->temp_token,$ship_option_id,$ship_location_id,$error_tmp);
+            $output = Helpers::calcCartTotals($this->db,TABLE_PREFIX_SHOP,$this->temp_token,$ship_option_id,$ship_location_id,$pay_option_id,$error_tmp);
             if($error_tmp !== '') {
                $error = 'Could not calculate cart totals. ';
                if($this->debug) $error .= $error_tmp; 
@@ -99,6 +100,7 @@ class CheckoutWizard extends Wizard
         //address details and user register if not logged in
         if($this->page_no == 3) {
             
+            //check if an existing user has not logged in
             if($this->user_id == 0) {
                 $exist = $this->user->getUser('EMAIL_EXIST',$this->form['user_email']);
                 if($exist !== 0 ) {
@@ -130,7 +132,26 @@ class CheckoutWizard extends Wizard
                     $this->data['user_email'] = $email;   
                     $this->data['password'] = $password;
                     $this->data['user_id'] = $user[$this->user_cols['id']];
-                    $this->user_id == $this->data['user_id'];
+                    //set user_id so wizard knows user created 
+                    $this->user_id = $this->data['user_id'];
+
+                    $mailer = $this->getContainer('mail');
+                    $to = $email;
+                    $from = ''; //default config email from used
+                    $subject = SITE_NAME.' user checkout registration';
+                    $body = 'Hi There '.$name."\r\n".
+                            'You have been registered as a user with us. Please note your credentials below:'."\r\n".
+                            'Login email: '.$email."\r\n".
+                            'Login Password: '.$password."\r\n\r\n".
+                            'Your are logged in for 30 days from device that you processed order from, unless you logout or delete site cookies.'."\r\n".
+                            'You can at any point request a password reset or login token to be emailed to you from login screen.';
+
+                    if($mailer->sendEmail($from,$to,$subject,$body,$error_tmp)) {
+                        $this->addMessage('Success sending your registration details to['.$to.'] '); 
+                    } else {
+                        $this->addMessage('Could not email your registration details to['.$to.'] '); 
+                        $this->addMessage('This is not a biggie. You are logged in from this device for 30 days, and you can always request a password reset or new login token from login screen using your email address.');
+                    } 
                 }
 
             }
@@ -162,14 +183,16 @@ class CheckoutWizard extends Wizard
             } 
 
             //finally update cart/order with all details
+            //MAYBE ONLY DO THIS AFTER PAYMENT RECEIVED???
             if(!$this->errors_found) {
                 $table_order = TABLE_PREFIX_SHOP.'order';
                 $data = [];
                 //NB: assign user id and remove temp token
                 $data['user_id'] = $this->user_id;
-                $data['temp_token'] = '';
                 $data['date_create'] = date('Y-m-d H:i:s');
                 $data['ship_address'] = $this->form['user_ship_address'];
+                $data['status'] = 'ACTIVE';
+                $data['temp_token'] = '';
 
                 $where = ['temp_token' => $this->temp_token];
                 $this->db->updateRecord($table_order,$data,$where,$error_tmp);
@@ -178,31 +201,42 @@ class CheckoutWizard extends Wizard
                     if($this->debug) $error .= $error_tmp;
                     $this->addError($error);
                 }
+            }
+
+            //finally redirect to payment gateway if that option reuested
+            if(!$this->errors_found) {
+
             }    
         }  
     }
 
     public function setupPageData($no)
     {
-        if($no == 3) {
-            //setup user data ONCE only, if a user is logged in
-            if($this->user_id != 0 and !isset($this->data['user_id'])) {
-                $this->data['user_id'] = $this->user_id;    
-                $this->data['user_name'] = $this->user->getName();
-                $this->data['user_email'] = $this->user->getEmail();
-                //get extended user info
-                $sql = 'SELECT * FROM '.TABLE_PREFIX_SHOP.'user_extend WHERE user_id = "'.$this->user_id.'" ';
-                $user_extend = $this->db->readSqlRecord($sql);
-                
+        //if($no == 3) {}
+        
+        //setup user data ONCE only, if a user is logged in
+        if($this->user_id != 0 and !isset($this->data['user_id'])) {
+            $this->data['user_id'] = $this->user_id;    
+            $this->data['user_name'] = $this->user->getName();
+            $this->data['user_email'] = $this->user->getEmail();
+
+            $this->saveData('data');
+
+            //get extended user info
+            $sql = 'SELECT * FROM '.TABLE_PREFIX_SHOP.'user_extend WHERE user_id = "'.$this->user_id.'" ';
+            $user_extend = $this->db->readSqlRecord($sql);
+            
+            if($user_extend != 0) {
                 $this->form['user_email_alt'] = $user_extend['email_alt'];
                 $this->form['user_cell'] = $user_extend['cell'];
                 $this->form['user_ship_address'] = $user_extend['ship_address'];
                 $this->form['user_bill_address'] = $user_extend['bill_address'];
 
                 //NB: need to save $this->data as required in subsequent pages
-                $this->saveData('data');
-            }
+                $this->saveData('form');
+            }    
         }
+        
     }
 
 }

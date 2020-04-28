@@ -12,6 +12,12 @@ class Task extends SeritiTask
 
         $login_user = $this->getContainer('user'); 
 
+
+        $this->addBlock('PRODUCT',2,2,'Manage product setup');
+        $this->addTask('PRODUCT','PRODUCT_SELLER','Manage product sellers'); 
+        $this->addTask('PRODUCT','PRODUCT_CATEGORY','Manage product category'); 
+        $this->addTask('PRODUCT','PRODUCT_TYPE','Manage product types'); 
+
         if($login_user->getAccessLevel() === 'GOD') {
             $this->addBlock('SHIP',1,1,'Setup shipping');
             $this->addTask('SHIP','SHIP_OPTIONS','Shipping options');
@@ -36,7 +42,26 @@ class Task extends SeritiTask
         $message = '';
         $n = 0;
         
-        
+                
+        if($id === 'PRODUCT_SELLER') {
+            $location = 'seller';
+            header('location: '.$location);
+            exit;
+        }
+
+        if($id === 'PRODUCT_CATEGORY') {
+            $location = 'category';
+            header('location: '.$location);
+            exit;
+        }
+
+        if($id === 'PRODUCT_TYPE') {
+            $location = 'type';
+            header('location: '.$location);
+            exit;
+        }
+
+
         if($id === 'SHIP_OPTIONS') {
             $location = 'ship_option';
             header('location: '.$location);

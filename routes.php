@@ -27,7 +27,7 @@ $app->group('/admin', function () {
         $this->any('/user_extend', \App\Shop\UserExtendController::class);
     })->add(\App\Shop\Config::class);
 
-})->add(\App\ConfigAdmin::class);
+})->add(\App\User\ConfigAdmin::class);
 //*** END admin access ***
 
 /*

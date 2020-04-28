@@ -87,7 +87,7 @@ class Report extends ReportTool
         //$options['format'] = $form['format'];
         
         if($id === 'SALES_COMPLETE') {
-            $html .= Helpers::salesReport($this->db,'COMPLETE',$form['user_id'],$form['from_month'],$form['from_year'],$form['to_month'],$form['to_year'],$options,$error);
+            $html .= Helpers::salesReport($this->db,'COMPLETED',$form['user_id'],$form['from_month'],$form['from_year'],$form['to_month'],$form['to_year'],$options,$error);
             if($error !== '') $this->addError($error);
         }
 

@@ -13,7 +13,182 @@ use Seriti\Tools\TABLE_USER;
 
 //static functions for shop module
 class Helpers {
+
+    public static function getOrderStatusText($status)
+    {
+        $text = '';
+        switch($status) {
+            case 'NEW': $text = 'Order is still in shopping cart.'; break;
+            case 'ACTIVE': $text = 'Order processed and awaiting payment'; break;
+            case 'PAID': $text = 'Order payment received and awating shipment'; break;
+            case 'SHIPPED': $text = 'Order has been shipped and awaiting confirmation of receipt'; break;
+            case 'COMPLETED': $text = 'Order has been received and is completed.'; break;
+            default: $text = 'Unrecognised order status['.$status.']';
+        }
+
+        return $text;
+    }
+    public static function checkOrderUpdateOk($db,$table_prefix,$order_id,&$error)
+    {
+        $error = '';
+        $error_tmp = '';
+
+        $table_order = $table_prefix.'order';
+
+        $sql = 'SELECT T.order_id,T.date_create,T.date_update,T.status '.
+               'FROM '.$table_order.' AS T '.
+               'WHERE T.order_id = "'.$db->escapeSql($order_id).'" ';
+        $data = $db->readSqlRecord($sql);       
+        if($data == 0) {
+            $error .= 'Could not find Order details.';
+        } else {
+            if($data['status'] !== 'NEW') $error .= 'You cannot modify a '.$data['status'].' Order ';
+        }
+
+        if($error === '') return true; else return false;
+    }
+
+
+    public static function getOrderDetails($db,$table_prefix,$order_id,&$error)
+    {
+        $error = '';
+        $output = [];
+        
+        $table_product = $table_prefix.'product';
+        $table_order = $table_prefix.'order';
+        $table_item = $table_prefix.'order_item';
+        $table_ship_location = $table_prefix.'ship_location';
+        $table_ship_option = $table_prefix.'ship_option';
+        $table_pay_option = $table_prefix.'pay_option';
+        $table_payment = $table_prefix.'payment';
+
+        $sql = 'SELECT O.order_id,O.date_create,O.status,O.no_items,O.subtotal,O.item_discount,O.discount,O.tax,O.total,'.
+                      'O.ship_address,O.ship_location_id,O.ship_option_id,O.ship_cost,O.pay_option_id, '.
+                      'O.user_id,U.name AS user_name,U.email AS user_email, '.
+                      'L.name AS ship_location,S.name AS ship_option,P.name AS pay_option '.
+               'FROM '.$table_order.' AS O '.
+                     'LEFT JOIN '.TABLE_USER.' AS U ON(O.user_id = U.user_id) '.
+                     'LEFT JOIN '.$table_ship_location.' AS L ON(O.ship_location_id = L.location_id) '.
+                     'LEFT JOIN '.$table_ship_option.' AS S ON(O.ship_option_id = S.option_id) '.
+                     'LEFT JOIN '.$table_pay_option.' AS P ON(O.pay_option_id = P.option_id) '.
+               'WHERE O.order_id = "'.$db->escapeSql($order_id).'" ';
+        $order = $db->readSqlRecord($sql);
+        if($order === 0) {
+            $error .= 'Invalid Order ID['.$order_id.']. ';
+        } else {
+            $output['order'] = $order;
+        }
+
+        $sql = 'SELECT I.item_id,I.product_id,P.name,I.price,I.status,P.weight,P.volume '.
+               'FROM '.$table_item.' AS I LEFT JOIN '.$table_product.' AS P ON(I.product_id = P.product_id) '.
+               'WHERE I.order_id = "'.$db->escapeSql($order_id).'" ';
+        $items = $db->readSqlArray($sql);
+        if($items === 0) {
+            $error .= 'Invalid or no products for Order ID['.$order_id.']. ';
+        } else {
+            $output['items'] = $items;
+        }
+
+        $sql = 'SELECT  date_create,amount,status '.
+               'FROM '.$table_payment.' WHERE order_id = "'.$db->escapeSql($order_id).'" ';
+        $output['payments'] = $db->readSqlArray($sql);
+        
+        if($error !== '') return false; else return $output;
+    }
+
+    public static function sendOrderMessage($db,$table_prefix,ContainerInterface $container,$order_id,$subject,$message,$param=[],&$error)
+    {
+        $html = '';
+        $error = '';
+        $error_tmp = '';
+
+        if(!isset($param['cc_admin'])) $param['cc_admin'] = true;
+
+        $system = $container['system'];
+        $mail = $container['mail'];
+
+        //setup email parameters
+        $mail_footer = $system->getDefault('SHOP_EMAIL_FOOTER','');
+        $mail_param = [];
+        $mail_param['format'] = 'html';
+        if($param['cc_admin']) $mail_param['bcc'] = MAIL_FROM;
+       
+        $data = self::getOrderDetails($db,$table_prefix,$order_id,$error_tmp);
+        if($data === false or $error_tmp !== '') {
+            $error .= 'Could not get Order details: '.$error_tmp;
+        } else {
+            if($data['order']['user_id'] == 0 or $data['order']['user_email'] === '') $error .= 'No user data linked to Order';
+        }    
+
+        if($error === '') {
+            $mail_from = ''; //will use default MAIL_FROM
+            $mail_to = $data['order']['user_email'];
+ 
+            $mail_subject = SITE_NAME.' Order ID['.$order_id.'] ';
+
+            if($subject !== '') $mail_subject .= ': '.$subject;
+            
+            $mail_body = '<h1>Hi there '.$data['order']['user_name'].'</h1>';
+            
+            if($message !== '') $mail_body .= '<h2>'.$message.'</h2>';
+            
+            //do not want bootstrap class default
+            $html_param = ['class'=>''];
+
+            $mail_body .= '<h3>Order items:</h3>'.Html::arrayDumpHtml($data['items'],$html_param);
+
+            if($data['payments'] !== 0) {
+                $mail_body .= '<h3>Payments</h3>'.Html::arrayDumpHtml($data['payments'],$html_param);
+            }
+                
+            $mail_body .= '<br/><br/>'.$mail_footer;
+            
+            $mail->sendEmail($mail_from,$mail_to,$mail_subject,$mail_body,$error_tmp,$mail_param);
+            if($error_tmp != '') { 
+                $error .= 'Error sending Order details to email['. $mail_to.']:'.$error_tmp; 
+            }
+        }
+
+        if($error === '') return true; else return false;
+    }
     
+    public static function getProductSummary($db,$table_prefix,$s3,$product_id)
+    {
+        $html = '';
+        $no_image_src = BASE_URL.'images/no_image.png';
+
+        $sql = 'SELECT product_id,name,description,status '.
+               'FROM '.$table_prefix.'product '.
+               'WHERE product_id = "'.$db->escapeSql($product_id).'" AND status <> "HIDE"';
+        $product = $db->readSqlRecord($sql);
+        if($product === 0) {
+            $html = '<p>product no longer available.</p>';
+            return $html;
+        } else {
+            $html .= '&nbsp;<strong>'.$product['name'].' (ID:'.$product['product_id'].')</strong>';
+        }
+
+
+        $location_id = 'PRD'.$product_id;
+        $sql = 'SELECT file_id,file_name_tn AS file_name,file_name_orig AS name '.
+               'FROM '.$table_prefix.'file WHERE location_id = "'.$db->escapeSql($location_id).'" '.
+               'ORDER BY location_rank, file_date DESC LIMIT 1';
+        $image = $db->readSqlRecord($sql);
+        if($image != 0) {
+            $url = $s3->getS3Url($image['file_name']);
+            $title = $image['name'];
+        } else {
+            $url = $no_image_src;
+            $title = 'No image available';
+        } 
+
+        $html = '<img class="list_image" src="'.$url.'" title="'.$title.'" align="left" height="50">'.$html;
+        //$html = '<a href="javascript:open_popup(\'image_popup?id='.$product_id.'\',600,600)">'.$html.'</a>'; 
+
+        return $html; 
+    }
+
+
     public function getProductImageGallery($db,$table_prefix,$s3,$product_id)
     {
         $html = '';
@@ -119,7 +294,7 @@ class Helpers {
     }
 
     //NB: recalculates all item and cart totals based on latest product data, ONLY call BEFORE order finalised.
-    public static function calcCartTotals($db,$table_prefix,$temp_token,$ship_option_id,$ship_location_id,&$error)  
+    public static function calcCartTotals($db,$table_prefix,$temp_token,$ship_option_id,$ship_location_id,$pay_option_id,&$error)  
     {
         $error = '';
         $error_tmp = '';
@@ -171,6 +346,7 @@ class Helpers {
             $totals = self::getCartItemTotals($db,$table_prefix,$order_id);
 
             $cart_update = [];
+            $cart_update['pay_option_id'] = $pay_option_id;
             $cart_update['ship_location_id'] = $ship_location_id;
             $cart_update['ship_option_id'] = $ship_option_id;
             $cart_update['subtotal'] = $totals['subtotal'];
@@ -492,7 +668,12 @@ class Helpers {
                'WHERE status = "'.$db->escapeSql($status).'" AND ';
         if($status === 'COMPLETE') $sql .= 'date_update >= "'.$date_from.'" AND date_update <= "'.$date_to.'" ';
         if($status === 'NEW') $sql .= 'date_create >= "'.$date_from.'" AND date_create <= "'.$date_to.'" ';
-        if($user_id !== 'ALL') $sql .= 'AND user_id = "'.$db->escapeSql($user_id).'" '; 
+        if($user_id === 'ALL') {
+            //this excludes all unprocessed shopping carts
+            $sql .= 'AND user_id <> 0 '; 
+        } else {
+            $sql .= 'AND user_id = "'.$db->escapeSql($user_id).'" '; 
+        }    
         $sql .= 'ORDER BY order_id DESC ';
 
         $orders = $db->readSqlArray($sql);

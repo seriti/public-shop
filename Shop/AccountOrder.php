@@ -36,7 +36,7 @@ class AccountOrder extends Table
         $this->addTableCol(array('id'=>'total','type'=>'DECIMAL','title'=>'Total cost'));
         $this->addTableCol(array('id'=>'ship_address','type'=>'TEXT','title'=>'Shipping address'));
         $this->addTableCol(array('id'=>'ship_location_id','type'=>'INTEGER','title'=>'Shipping location','join'=>'name FROM '.$this->table_prefix.'ship_location WHERE location_id'));
-        $this->addTableCol(array('id'=>'ship_option_id','type'=>'INTEGER','title'=>'Shipping location','join'=>'name FROM '.$this->table_prefix.'ship_option WHERE option_id'));
+        $this->addTableCol(array('id'=>'ship_option_id','type'=>'INTEGER','title'=>'Shipping option','join'=>'name FROM '.$this->table_prefix.'ship_option WHERE option_id'));
         $this->addTableCol(array('id'=>'status','type'=>'STRING','title'=>'Status'));
 
         $this->addSql('WHERE','T.user_id = "'.$this->db->escapeSql($this->user_id).'" ');
