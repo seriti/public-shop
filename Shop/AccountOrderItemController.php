@@ -23,11 +23,8 @@ class AccountOrderItemController
         $user = $this->container->user;
 
         //NB: TABLE_PREFIX constant not applicable as not called within admin module
-        //$table_prefix = TABLE_PREFIX_SHOP;
-        $module = $this->container->config->get('module','shop');
-        $table_prefix = $module['table_prefix'];
-       
-        
+        $table_prefix = MODULE_SHOP['table_prefix'];
+               
         $table_name = $table_prefix.'order_item'; 
         $table = new AccountOrderItem($this->container->mysql,$this->container,$table_name);
 

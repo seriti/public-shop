@@ -6,7 +6,7 @@ use Seriti\Tools\TABLE_USER;
 
 class AccountProfile extends Record 
 {
-    protected $table_prefix = TABLE_PREFIX_SHOP;
+    protected $table_prefix = MODULE_SHOP['table_prefix'];
     protected $user_id = 0;
 
     //configure
@@ -17,7 +17,13 @@ class AccountProfile extends Record
 
         $sql = 'SELECT extend_id FROM '.$this->table_prefix.'user_extend '.
                'WHERE user_id = "'.$this->db->escapeSql($this->user_id).'" ';
-        $extend_id = $this->db->readSqlValue($sql);       
+        $extend_id = $this->db->readSqlValue($sql);  
+        if($extend_id === 0) {
+            $data = [];
+            $data['user_id'] = $this->user_id;
+            $extend_id = $this->db->insertRecord($this->table_prefix.'user_extend',$data,$error);
+            if($error !== '') throw new Exception('ACCOUNT_PROFILE_ERROR: Could not extend user profile.');
+        }       
 
         $param = ['record_name'=>'Profile','col_label'=>'name','record_id'=>$extend_id];
         parent::setup($param); 

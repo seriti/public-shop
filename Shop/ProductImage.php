@@ -14,6 +14,7 @@ class ProductImage extends Upload
                   'pop_up'=>true,
                   'col_label'=>'file_name_orig',
                   'update_calling_page'=>true,
+                  'upload_access'=>IMAGE_ACCESS,
                   'prefix'=>$id_prefix];
         parent::setup($param);
 

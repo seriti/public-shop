@@ -23,6 +23,7 @@ class CheckoutWizard extends Wizard
     protected $user;
     protected $temp_token;
     protected $user_id;
+    protected $table_prefix = MODULE_SHOP['table_prefix'];
     
     //configure
     public function setup($param = []) 
@@ -72,17 +73,17 @@ class CheckoutWizard extends Wizard
             $ship_location_id = $this->form['ship_location_id'];
             $pay_option_id = $this->form['pay_option_id'];
 
-            $output = Helpers::calcCartTotals($this->db,TABLE_PREFIX_SHOP,$this->temp_token,$ship_option_id,$ship_location_id,$pay_option_id,$error_tmp);
+            $output = Helpers::calcCartTotals($this->db,$this->table_prefix,$this->temp_token,$ship_option_id,$ship_location_id,$pay_option_id,$error_tmp);
             if($error_tmp !== '') {
                $error = 'Could not calculate cart totals. ';
                if($this->debug) $error .= $error_tmp; 
                $this->addError($error); 
             } else {
-                $sql = 'SELECT name FROM '.TABLE_PREFIX_SHOP.'ship_location WHERE location_id = "'.$this->db->escapeSql($ship_location_id).'" ';
+                $sql = 'SELECT name FROM '.$this->table_prefix.'ship_location WHERE location_id = "'.$this->db->escapeSql($ship_location_id).'" ';
                 $this->data['ship_location'] = $this->db->readSqlValue($sql);
-                $sql = 'SELECT name FROM '.TABLE_PREFIX_SHOP.'ship_option WHERE option_id = "'.$this->db->escapeSql($ship_option_id).'" ';
+                $sql = 'SELECT name FROM '.$this->table_prefix.'ship_option WHERE option_id = "'.$this->db->escapeSql($ship_option_id).'" ';
                 $this->data['ship_option'] = $this->db->readSqlValue($sql);
-                $sql = 'SELECT name,type_id,config FROM '.TABLE_PREFIX_SHOP.'pay_option WHERE option_id = "'.$this->db->escapeSql($pay_option_id).'" ';
+                $sql = 'SELECT name,type_id,config FROM '.$this->table_prefix.'pay_option WHERE option_id = "'.$this->db->escapeSql($pay_option_id).'" ';
                 $this->data['pay'] = $this->db->readSqlRecord($sql);
                 $this->data['pay_option'] = $this->data['pay']['name'];
                 
@@ -158,7 +159,7 @@ class CheckoutWizard extends Wizard
 
 
             if(!$this->errors_found) {
-                $table_extend = TABLE_PREFIX_SHOP.'user_extend';  
+                $table_extend = $this->table_prefix.'user_extend';  
 
                 $data = [];
                 $data['user_id'] = $this->user_id;
@@ -185,7 +186,7 @@ class CheckoutWizard extends Wizard
             //finally update cart/order with all details
             //MAYBE ONLY DO THIS AFTER PAYMENT RECEIVED???
             if(!$this->errors_found) {
-                $table_order = TABLE_PREFIX_SHOP.'order';
+                $table_order = $this->table_prefix.'order';
                 $data = [];
                 //NB: assign user id and remove temp token
                 $data['user_id'] = $this->user_id;
@@ -223,7 +224,7 @@ class CheckoutWizard extends Wizard
             $this->saveData('data');
 
             //get extended user info
-            $sql = 'SELECT * FROM '.TABLE_PREFIX_SHOP.'user_extend WHERE user_id = "'.$this->user_id.'" ';
+            $sql = 'SELECT * FROM '.$this->table_prefix.'user_extend WHERE user_id = "'.$this->user_id.'" ';
             $user_extend = $this->db->readSqlRecord($sql);
             
             if($user_extend != 0) {

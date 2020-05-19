@@ -23,7 +23,7 @@ $list_param['class'] = 'form-control edit_input';
     <div class="col-sm-3">Ship to location:</div>
     <div class="col-sm-3">
     <?php 
-    $sql = 'SELECT location_id, name FROM '.TABLE_PREFIX_SHOP.'ship_location WHERE status = "OK" ORDER BY sort';
+    $sql = 'SELECT location_id, name FROM '.MODULE_SHOP['table_prefix'].'ship_location WHERE status = "OK" ORDER BY sort';
     echo Form::sqlList($sql,$db,'ship_location_id',$form['ship_location_id'],$list_param) 
     ?>
     </div>
@@ -33,7 +33,7 @@ $list_param['class'] = 'form-control edit_input';
     <div class="col-sm-3">Shipping option:</div>
     <div class="col-sm-3">
     <?php 
-    $sql = 'SELECT option_id, name FROM '.TABLE_PREFIX_SHOP.'ship_option WHERE status = "OK" ORDER BY sort';
+    $sql = 'SELECT option_id, name FROM '.MODULE_SHOP['table_prefix'].'ship_option WHERE status = "OK" ORDER BY sort';
     echo Form::sqlList($sql,$db,'ship_option_id',$form['ship_option_id'],$list_param) 
     ?>
     </div>
@@ -43,7 +43,7 @@ $list_param['class'] = 'form-control edit_input';
     <div class="col-sm-3">Payment option:</div>
     <div class="col-sm-3">
     <?php 
-    $sql = 'SELECT option_id, name FROM '.TABLE_PREFIX_SHOP.'pay_option WHERE status = "OK" ORDER BY sort';
+    $sql = 'SELECT option_id, name FROM '.MODULE_SHOP['table_prefix'].'pay_option WHERE status = "OK" ORDER BY sort';
     echo Form::sqlList($sql,$db,'pay_option_id',$form['pay_option_id'],$list_param) 
     ?>
     </div>

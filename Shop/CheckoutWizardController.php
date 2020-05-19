@@ -20,10 +20,8 @@ class CheckoutWizardController
 
     public function __invoke($request, $response, $args)
     {
+        $db = $this->container->mysql;
         $cache = $this->container->cache;
-        //defined in configPublic.php
-        //$module = $this->container->config->get('module','shop');
-        //define('TABLE_PREFIX_SHOP',$module['table_prefix']);
 
         $temp_token = $this->container->user->getTempToken();
 
@@ -34,7 +32,7 @@ class CheckoutWizardController
 
         $wizard_template = new Template(BASE_TEMPLATE);
         
-        $wizard = new CheckoutWizard($this->container->mysql,$this->container,$cache,$wizard_template);
+        $wizard = new CheckoutWizard($db,$this->container,$cache,$wizard_template);
         $wizard->setup();        
 
         $html = $wizard->process();

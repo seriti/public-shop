@@ -10,5 +10,7 @@ $container['config']->set('module','shop',['name'=>'Shop manager',
                                             'route_root'=>'admin/shop/',
                                             'route_list'=>['dashboard'=>'Dashboard','product'=>'Products','category'=>'Categories',
                                                            'order'=>'Orders','payment'=>'Payments','task'=>'Tasks','report'=>'Reports'],
+                                            'labels'=>['category'=>'Category','type'=>'Type','order'=>'Order'],
+                                            'images'=>['access'=>'PUBLIC'],
                                             'table_prefix'=>'shp_'
                                             ]);

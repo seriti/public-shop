@@ -9,7 +9,7 @@ use App\Shop\Helpers;
 
 class AccountOrder extends Table 
 {
-    protected $table_prefix = TABLE_PREFIX_SHOP;
+    protected $table_prefix = MODULE_SHOP['table_prefix'];
     protected $user_id = 0;
 
     //configure

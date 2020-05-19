@@ -155,6 +155,9 @@ class Helpers {
     public static function getProductSummary($db,$table_prefix,$s3,$product_id)
     {
         $html = '';
+
+        if(!isset($param['access'])) $param['access'] = MODULE_SHOP['images']['access'];
+        
         $no_image_src = BASE_URL.'images/no_image.png';
 
         $sql = 'SELECT product_id,name,description,status '.
@@ -175,7 +178,7 @@ class Helpers {
                'ORDER BY location_rank, file_date DESC LIMIT 1';
         $image = $db->readSqlRecord($sql);
         if($image != 0) {
-            $url = $s3->getS3Url($image['file_name']);
+            $url = $s3->getS3Url($image['file_name'],['access'=>$param['access']]);
             $title = $image['name'];
         } else {
             $url = $no_image_src;
@@ -189,9 +192,11 @@ class Helpers {
     }
 
 
-    public function getProductImageGallery($db,$table_prefix,$s3,$product_id)
+    public function getProductImageGallery($db,$table_prefix,$s3,$product_id,$param = [])
     {
         $html = '';
+
+        if(!isset($param['access'])) $param['access'] = MODULE_SHOP['images']['access'];
 
         $sql = 'SELECT name,description,options '.
                'FROM '.$table_prefix.'product '.
@@ -212,7 +217,7 @@ class Helpers {
         if($images != 0) {
             //setup amazon links
             foreach($images as $id => $image) {
-                $url = $s3->getS3Url($image['file_name']);
+                $url = $s3->getS3Url($image['file_name'],['access'=>$param['access']]);
                 $images[$id]['src'] = $url;
             }
 

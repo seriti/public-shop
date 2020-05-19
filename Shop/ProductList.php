@@ -28,15 +28,14 @@ use Psr\Container\ContainerInterface;
 class ProductList extends Listing
 {
     
-    protected $table_prefix;
+    protected $table_prefix = MODULE_SHOP['table_prefix'];
 
     //configure
     public function setup($param = []) 
     {
         //Class accessed outside /App/Shop so cannot use TABLE_PREFIX constant
-        $module = $this->container->config->get('module','shop');
-        $this->table_prefix = $module['table_prefix'];
-        $labels = $module['labels'];
+        $labels = MODULE_SHOP['labels'];
+        $image_access = MODULE_SHOP['images']['access'];
         
         $currency = 'R';
 
@@ -88,7 +87,7 @@ class ProductList extends Listing
         $this->addSearch(array('name','description','category_id'),array('rows'=>2));
 
         $this->setupListImages(array('table'=>$this->table_prefix.'file','location'=>'PRD','max_no'=>100,'manage'=>false,
-                                     'list'=>true,'list_no'=>1,'storage'=>STORAGE,'title'=>'Product',
+                                     'list'=>true,'list_no'=>1,'storage'=>STORAGE,'title'=>'Product','access'=>$image_access,
                                      'link_url'=>'not_used','link_data'=>'SIMPLE','width'=>'700','height'=>'600'));
 
         /*                          

@@ -30,10 +30,16 @@ class Config
         
         $module = $this->container->config->get('module','shop');
         $menu = $this->container->menu;
+
+        //NB: Also defined in Website/ConfigPublic
+        define('MODULE_SHOP',$module);
         
         define('TABLE_PREFIX',$module['table_prefix']);
         if(!defined('CURRENCY_ID')) define('CURRENCY_ID','ZAR');
         if(!defined('CURRENCY_SYMBOL')) define('CURRENCY_SYMBOL','R');
+
+        //NB: If S3 access = PUBLIC/PRIVATE
+        define('IMAGE_ACCESS',$module['images']['access']);
                 
         define('MODULE_ID','SHOP');
         define('MODULE_LOGO','<span class="glyphicon glyphicon-shopping-cart"></span> ');

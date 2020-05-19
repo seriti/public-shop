@@ -26,8 +26,9 @@ class ImagePopupController
         $module = $this->container->config->get('module','shop');
         $table_prefix = $module['table_prefix'];
         
+        $param = ['access'=>$module['images']['access']];
         $product_id = $_GET['id'];
-        $html = Helpers::getProductImageGallery($db,$table_prefix,$s3,$product_id);
+        $html = Helpers::getProductImageGallery($db,$table_prefix,$s3,$product_id,$param);
 
         $template['html'] = $html;
         //$template['title'] = $title;

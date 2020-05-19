@@ -5,6 +5,8 @@ use Seriti\Tools\Table;
 
 class AccountOrderPayment extends Table 
 {
+    protected $table_prefix = MODULE_SHOP['table_prefix'];
+
     //configure
     public function setup($param = []) 
     {
@@ -12,8 +14,8 @@ class AccountOrderPayment extends Table
         parent::setup($param);        
                        
         //NB: specify master table relationship
-        $this->setupMaster(array('table'=>TABLE_PREFIX_SHOP.'order','key'=>'order_id','child_col'=>'order_id', 
-                                 'show_sql'=>'SELECT CONCAT("Order ID[",order_id,"] created-",date_create) FROM '.TABLE_PREFIX_SHOP.'order WHERE order_id = "{KEY_VAL}" '));  
+        $this->setupMaster(array('table'=>$this->table_prefix.'order','key'=>'order_id','child_col'=>'order_id', 
+                                 'show_sql'=>'SELECT CONCAT("Order ID[",order_id,"] created-",date_create) FROM '.$this->table_prefix.'order WHERE order_id = "{KEY_VAL}" '));  
 
         
         $access['read_only'] = true;                         
