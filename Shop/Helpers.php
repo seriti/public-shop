@@ -8,7 +8,13 @@ use Seriti\Tools\Validate;
 use Seriti\Tools\Html;
 use Seriti\Tools\Image;
 
+use Seriti\Tools\MAIL_FROM;
+use Seriti\Tools\BASE_URL;
 use Seriti\Tools\TABLE_USER;
+use Seriti\Tools\TABLE_SYSTEM;
+use Seriti\Tools\SITE_NAME;
+
+use Psr\Container\ContainerInterface;
 
 
 //static functions for shop module
@@ -65,7 +71,8 @@ class Helpers {
         $sql = 'SELECT O.order_id,O.date_create,O.status,O.no_items,O.subtotal,O.item_discount,O.discount,O.tax,O.total,'.
                       'O.ship_address,O.ship_location_id,O.ship_option_id,O.ship_cost,O.pay_option_id, '.
                       'O.user_id,U.name AS user_name,U.email AS user_email, '.
-                      'L.name AS ship_location,S.name AS ship_option,P.name AS pay_option '.
+                      'L.name AS ship_location,S.name AS ship_option,'.
+                      'P.name AS pay_option,P.type_id AS pay_type,P.config AS pay_config '.
                'FROM '.$table_order.' AS O '.
                      'LEFT JOIN '.TABLE_USER.' AS U ON(O.user_id = U.user_id) '.
                      'LEFT JOIN '.$table_ship_location.' AS L ON(O.ship_location_id = L.location_id) '.
@@ -309,7 +316,7 @@ class Helpers {
         $table_ship = $table_prefix.'ship_cost';
         $table_item = $table_prefix.'order_item';
         $table_product = $table_prefix.'product';
-
+        
         $cart = Helpers::getCart($db,$table_prefix,$temp_token);
         if($cart === 0) {
             $error .= 'Cart has expired';
@@ -339,14 +346,14 @@ class Helpers {
 
         //get shipping costs
         if($error === '') {
-            $sql = 'SELECT  cost_free,cost_max,cost_base,cost_weight,cost_volume,cost_item FROM '.$table_ship .' '.
+            $sql = 'SELECT  option_id,cost_free,cost_max,cost_base,cost_weight,cost_volume,cost_item FROM '.$table_ship .' '.
                    'WHERE option_id = "'.$db->escapeSql($ship_option_id).'" AND location_id = "'.$db->escapeSql($ship_location_id).'" ';
             $ship_setup = $db->readSqlRecord($sql);
             if($ship_setup === 0) $error .= 'There is no valid shipping costs setup for your location and shipping option.'; 
         }
 
 
-        //calculate cart totals
+        //calculate cart totals and update options
         if($error === '') {
             $totals = self::getCartItemTotals($db,$table_prefix,$order_id);
 
@@ -390,6 +397,7 @@ class Helpers {
             $output['order_id'] = $order_id;
             $output['items'] = $items;
             $output['totals'] = $cart_update;
+                        
             return $output;
         } else {
             return false;

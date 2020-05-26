@@ -76,7 +76,8 @@ class SetupData extends SetupModuledata
                               `ship_option_id` INT NOT NULL,
                               `pay_option_id` INT NOT NULL,
                               PRIMARY KEY (`order_id`),
-                              UNIQUE KEY `idx_shp_order1` (`temp_token`)
+                              KEY `idx_shp_order1` (`temp_token`),
+                              KEY `idx_shp_order2` (`user_id`)
                             ) ENGINE = MyISAM DEFAULT CHARSET=utf8');
 
         $this->addCreateSql('order_item',

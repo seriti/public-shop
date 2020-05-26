@@ -52,7 +52,7 @@ class AccountDashboard extends DashboardTool
                 } else {
                     $item_href = "javascript:open_popup('order_item?id=".$order_id."',600,600)";
                     $order_html .= '<li>'.
-                                   'Order ID['.$order_id.'] Created on '.Date::formatDate($date_create).':<br/> '.
+                                   'Order-'.$order_id.' Created on '.Date::formatDate($date_create).':<br/> '.
                                    'Status: <strong>'.Helpers::getOrderStatusText($order['order']['status']).'</strong><br/>'.
                                    'Items: '.$order['order']['no_items'].' <a href="'.$item_href.'">(view items)</a><br/>'.
                                    'Ship method: '.$order['order']['ship_option'].'<br/>'.

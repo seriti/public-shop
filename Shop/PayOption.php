@@ -16,6 +16,7 @@ class PayOption extends Table
         
         $this->addTableCol(array('id'=>'type_id','type'=>'STRING','title'=>'Payment type'));
         $this->addTableCol(array('id'=>'name','type'=>'STRING','title'=>'Name'));
+        $this->addTableCol(array('id'=>'config','type'=>'TEXT','title'=>'Configuration'));
         $this->addTableCol(array('id'=>'sort','type'=>'INTEGER','title'=>'Sort Order','hint'=>'Option display order in dropdowns'));
         $this->addTableCol(array('id'=>'status','type'=>'STRING','title'=>'Status'));
         
@@ -31,7 +32,7 @@ class PayOption extends Table
         $this->addSelect('type_id',['list'=>$pay_type,'list_assoc'=>true]);
 
         $status = ['OK','HIDE'];
-        $this->addSelect('status',['list'=>$status,'list_assoc'=>fals]);
+        $this->addSelect('status',['list'=>$status,'list_assoc'=>false]);
    }
 }
 ?>

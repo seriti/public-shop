@@ -89,6 +89,7 @@ class CheckoutWizard extends Wizard
                 
                 $this->data['totals'] = $output['totals'];
                 $this->data['items'] = $output['items'];
+                $this->data['order_id'] = $output['order_id'];
             }
 
         } 
@@ -105,7 +106,8 @@ class CheckoutWizard extends Wizard
             if($this->user_id == 0) {
                 $exist = $this->user->getUser('EMAIL_EXIST',$this->form['user_email']);
                 if($exist !== 0 ) {
-                    $this->addError('Your email address is already in use! Please <a href="/login">login</a> with that email, or use a different address.');
+                    $this->addError('Your email address is already in use!');
+                    $this->addMessage('Please <a href="/login">login</a> with that email, or use a different email address.');
                 }    
             }
 
@@ -184,29 +186,50 @@ class CheckoutWizard extends Wizard
             } 
 
             //finally update cart/order with all details
-            //MAYBE ONLY DO THIS AFTER PAYMENT RECEIVED???
             if(!$this->errors_found) {
                 $table_order = $this->table_prefix.'order';
                 $data = [];
-                //NB: assign user id and remove temp token
+                //NB: *** ASSIGN USER ID & REMOVE TEMP TOKEN *** this designates it as a valid order and not temp cart
                 $data['user_id'] = $this->user_id;
                 $data['date_create'] = date('Y-m-d H:i:s');
                 $data['ship_address'] = $this->form['user_ship_address'];
                 $data['status'] = 'ACTIVE';
                 $data['temp_token'] = '';
 
-                $where = ['temp_token' => $this->temp_token];
+                //$where = ['temp_token' => $this->temp_token];
+                $where = ['order_id' => $this->data['order_id']];
                 $this->db->updateRecord($table_order,$data,$where,$error_tmp);
                 if($error_tmp !== '') {
                     $error = 'We could not update order details.';
                     if($this->debug) $error .= $error_tmp;
                     $this->addError($error);
-                }
+                } 
             }
 
             //finally redirect to payment gateway if that option reuested
             if(!$this->errors_found) {
+                if($this->data['pay']['type_id'] === 'EFT_TOKEN') {
+                    //send user message with payment instructions
+                    $param = ['cc_admin'=>true];
+                    $subject = 'EFT Payment instructions';
+                    $message = 'Please use payment Reference: Order-'.$this->data['order_id'].'<br/>'.
+                               'We will ship your order once payment is received. <br/>'. 
+                               'Our bank account details:<br/>'.nl2br($this->data['pay']['config']);
 
+                    Helpers::sendOrderMessage($this->db,$this->table_prefix,$this->container,$this->data['order_id'],$subject,$message,$param,$error_tmp);
+                    if($error_tmp !== '') {
+                        $message = 'We could not email you order details, but your order has been successfully processed. PLease check your account page for details.';
+                        if($this->debug) $message .= $error_tmp;
+                        $this->addMessage($message);
+                    } 
+                }
+
+                if($this->data['pay']['type_id'] === 'GATEWAY_FORM') {
+                    //redirect based on json configuration
+                    $config = json_decode($this->data['pay']['config'],true);
+
+
+                }
             }    
         }  
     }
