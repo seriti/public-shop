@@ -15,6 +15,7 @@ class Payment extends Table
         $this->addTableCol(array('id'=>'order_id','type'=>'INTEGER','title'=>'Order ID'));
         $this->addTableCol(array('id'=>'date_create','type'=>'DATETIME','title'=>'Date paid'));
         $this->addTableCol(array('id'=>'amount','type'=>'DECIMAL','title'=>'Amount'));
+        $this->addTableCol(array('id'=>'comment','type'=>'TEXT','title'=>'Comment','required'=>false));
         $this->addTableCol(array('id'=>'status','type'=>'STRING','title'=>'Status'));
 
         $this->addSortOrder('T.order_id DESC','Most recent first','DEFAULT');

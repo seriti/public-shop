@@ -22,7 +22,7 @@ class PayOptionController
         $html = $table->processTable();
         
         $template['html'] = $html;
-        $template['title'] = MODULE_LOGO.': Payment options';
+        $template['title'] = MODULE_LOGO.': All Payment options';
         
         return $this->container->view->render($response,'admin.php',$template);
     }

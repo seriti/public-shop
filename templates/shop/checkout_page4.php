@@ -6,7 +6,16 @@ $list_param['class'] = 'form-control edit_input';
 $text_param['class'] = 'form-control edit_input';
 $textarea_param['class'] = 'form-control edit_input';
 
-$totals = $data['totals']
+$totals = $data['totals'];
+$pay_type = $data['pay']['type_id'];
+
+if(isset($data['user_created']) and $data['user_created']) $user_created = true; else $user_created = false;
+
+$button_text = 'Confirm Order ';
+if($pay_type === 'EFT_TOKEN')  $button_text .= '& Email me payment instructions.';
+if($pay_type === 'GATEWAY_FORM')  $button_text .= '& Proceed to '.$data['pay']['name'];
+
+//************** paymemt gateway form need to be constructed already!!!!!!
 ?>
 
 <div id="checkout_div">
@@ -57,15 +66,20 @@ $totals = $data['totals']
       <div class="row">
         <div class="col-sm-12">
           <?php 
-          if(isset($data['user_created']) and $data['user_created']) {
+          if($user_created) {
             echo '<h2>You are now registered with us and logged in. You have been emailed your password.</h2>';
           } 
 
-          echo '<h2>Your order has been processed and will be completed once payment is confirmed</h2>';
-
+          if($pay_type === 'GATEWAY_FORM') {
+             echo '<h2>Click to proceed to payment gateway</h2>'; 
+             echo $data['gateway_form']; 
+          }
+          
+          if($pay_type === 'EFT_TOKEN') {
+              echo '<h2>You have been emailed payment instructions.</h2>'; 
+          } 
           
           ?>
-          <input type="submit" name="Submit" value="Proceed to payment gateway" class="btn btn-primary">
         </div>
       </div>
     </div>

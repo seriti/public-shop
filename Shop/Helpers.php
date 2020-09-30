@@ -34,6 +34,70 @@ class Helpers {
 
         return $text;
     }
+
+
+    //called from payment module code after a transaction SUCCESSFULLY confirmed or notified
+    public static function paymentGatewayOrderUpdate($db,$table_prefix,$order_id,$amount,&$error) 
+    {
+        $error = '';
+        $table_order = $table_prefix.'order';
+        $table_payment = $table_prefix.'payment';
+
+        //check if payment exists
+        $sql = 'SELECT payment_id,date_create,status '.
+               'FROM '.$table_payment.' '.
+               'WHERE order_id = "'.$db->escapeSql($order_id).'" AND amount = "'.$db->escapeSql($amount).'" ';
+        $payment = $db->readSqlRecord($sql); 
+        if($payment != 0) {
+            $error .= 'Shop order['.$order_id.'] already has a payment amount['.$amount.'] @ '.$payment['date_create'];
+        } else {
+            $data = [];
+            $data['order_id'] = $order_id;
+            $data['date_create'] = date('Y-m-d H:i:s');
+            $data['amount'] = $amount;
+            $data['comment'] = $comment;
+            $data['status'] = 'CONFIRMED';
+
+            $payment_id = $db->insertRecord($table_payment,$data,$error);
+            if($error === '') {
+                //SEND SOME MESSAGE TO USER?
+            }
+        }  
+
+        //update order status if all paid up
+        if($error === '') {
+            self::updateOrderStatus($db,$table_prefix,$order_id,$error);
+        } 
+
+    }   
+
+    public static function updateOrderStatus($db,$table_prefix,$order_id,&$error)
+    {
+        $error = '';
+        $table_order = $table_prefix.'order';
+        $table_payment = $table_prefix.'payment';
+
+        $sql = 'SELECT * FROM '.$table_order.' WHERE order_id = "'.$db->escapeSql($order_id).'" ';
+        $order = $db->readSqlRecord($sql);
+        if($order == 0) {
+            $error .= 'Invalid order ID['.$order_id.']';
+        } else {
+            $sql = 'SELECT SUM(amount) FROM '.$table_payment.' WHERE order_id = "'.$db->escapeSql($order_id).'" AND status = "CONFIRMED" ';
+            $total_confirmed = $db->readSqlValue($sql,0);
+        }
+
+        if($error === '') {
+            if($total_confirmed - $order['total'] > -1.00) $paid_up = true; else $paid_up = false;
+            if($paid_up and $order['status'] !== 'SHIPPED' and $order['status'] !== 'COMPLETED' ) {
+                $sql = 'UPDATE '.$table_order.' SET status = "PAID" WHERE order_id = "'.$db->escapeSql($order_id).'" ';
+                $db->executeSql($sql,$error);
+                if($error === '') {
+                    //SEND SOME MESSAGE TO USER?
+                }
+            }
+        }
+    }
+
     public static function checkOrderUpdateOk($db,$table_prefix,$order_id,&$error)
     {
         $error = '';
@@ -48,7 +112,7 @@ class Helpers {
         if($data == 0) {
             $error .= 'Could not find Order details.';
         } else {
-            if($data['status'] !== 'NEW') $error .= 'You cannot modify a '.$data['status'].' Order ';
+            if($data['status'] === 'COMPLETED') $error .= 'You cannot modify a '.$data['status'].' Order ';
         }
 
         if($error === '') return true; else return false;
@@ -72,7 +136,7 @@ class Helpers {
                       'O.ship_address,O.ship_location_id,O.ship_option_id,O.ship_cost,O.pay_option_id, '.
                       'O.user_id,U.name AS user_name,U.email AS user_email, '.
                       'L.name AS ship_location,S.name AS ship_option,'.
-                      'P.name AS pay_option,P.type_id AS pay_type,P.config AS pay_config '.
+                      'P.name AS pay_option '.
                'FROM '.$table_order.' AS O '.
                      'LEFT JOIN '.TABLE_USER.' AS U ON(O.user_id = U.user_id) '.
                      'LEFT JOIN '.$table_ship_location.' AS L ON(O.ship_location_id = L.location_id) '.
@@ -86,7 +150,7 @@ class Helpers {
             $output['order'] = $order;
         }
 
-        $sql = 'SELECT I.item_id,I.product_id,P.name,I.price,I.status,P.weight,P.volume '.
+        $sql = 'SELECT I.item_id,I.product_id,P.name,I.price,I.quantity,I.subtotal,I.tax,I.discount,I.total,I.options,P.weight,P.volume,I.status '.
                'FROM '.$table_item.' AS I LEFT JOIN '.$table_product.' AS P ON(I.product_id = P.product_id) '.
                'WHERE I.order_id = "'.$db->escapeSql($order_id).'" ';
         $items = $db->readSqlArray($sql);
@@ -99,6 +163,16 @@ class Helpers {
         $sql = 'SELECT  date_create,amount,status '.
                'FROM '.$table_payment.' WHERE order_id = "'.$db->escapeSql($order_id).'" ';
         $output['payments'] = $db->readSqlArray($sql);
+
+        if($output['payments'] == 0) {
+            $output['payment_total'] = 0;
+        } else {    
+            $sql = 'SELECT  SUM(amount) '.
+                   'FROM '.$table_payment.' WHERE order_id = "'.$db->escapeSql($order_id).'" ';
+            $output['payment_total'] = $db->readSqlValue($sql,0);    
+        }
+        
+
         
         if($error !== '') return false; else return $output;
     }
@@ -137,7 +211,7 @@ class Helpers {
             
             $mail_body = '<h1>Hi there '.$data['order']['user_name'].'</h1>';
             
-            if($message !== '') $mail_body .= '<h2>'.$message.'</h2>';
+            if($message !== '') $mail_body .= '<h3>'.$message.'</h3>';
             
             //do not want bootstrap class default
             $html_param = ['class'=>''];

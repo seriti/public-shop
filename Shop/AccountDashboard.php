@@ -51,6 +51,10 @@ class AccountDashboard extends DashboardTool
                     $order_html .= '<li>Error: '.$error.'</li>';
                 } else {
                     $item_href = "javascript:open_popup('order_item?id=".$order_id."',600,600)";
+                    $payment_link = '';
+                    if($order['order']['status'] === 'ACTIVE') {
+                       $payment_link = '<a href = "payment?order='.$order_id.'">Make payment now</a>';
+                    }
                     $order_html .= '<li>'.
                                    'Order-'.$order_id.' Created on '.Date::formatDate($date_create).':<br/> '.
                                    'Status: <strong>'.Helpers::getOrderStatusText($order['order']['status']).'</strong><br/>'.
@@ -61,8 +65,10 @@ class AccountDashboard extends DashboardTool
                                    'Sub total: '.CURRENCY_SYMBOL.$order['order']['subtotal'].'<br/>'.
                                    'Shipping: '.CURRENCY_SYMBOL.$order['order']['ship_cost'].'<br/>'.
                                    'Total: '.CURRENCY_SYMBOL.$order['order']['total'].'<br/>'.
-                                   'Payment method: '.$order['order']['pay_option'].'<br/>'.
+                                   'Payment method: '.$order['order']['pay_option'].'<br/>'.$payment_link.
                                    '</li>'; 
+
+
                 }
                
             }

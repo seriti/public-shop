@@ -17,7 +17,12 @@ That said, if you are an experienced PHP programmer you will have no problem doi
 ## Requires Seriti public-website module
 
 You will be able to setup and manage shop products but for the public to view them and order products you will need to have the **git clone https://github.com/seriti/public-website**
-module installed. Payment processing still needs to be added, coming soon...
+module installed. 
+
+## Requires Seriti public-payment module
+
+You will be able to setup and manage shop products but for the public to be able to use checkout wizard and process payments you will need to have the **git clone https://github.com/seriti/public-payment**
+module installed. 
 
 ## Install the module
 
@@ -31,7 +36,8 @@ Once you have a local copy of module code check that it has following structure:
 
 /Shop/(all module implementation classes are in this folder)  
 /setup_add.php  
-/routes.php  
+/routes.php 
+/templates/shop/(all templates for checkout wizard and payment wizard) 
 
 3.) Copy the **Shop** folder and all its contents into **[directory-for-app]/app** folder.
 

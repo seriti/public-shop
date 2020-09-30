@@ -40,6 +40,8 @@ class AccountOrder extends Table
         $this->addTableCol(array('id'=>'status','type'=>'STRING','title'=>'Status'));
 
         $this->addSql('WHERE','T.user_id = "'.$this->db->escapeSql($this->user_id).'" ');
+
+        $this->addSortOrder('T.order_id DESC','Most recent first','DEFAULT');
         
         //$this->addAction(array('type'=>'edit','text'=>'edit','icon_text'=>'edit'));
         //$this->addAction(array('type'=>'delete','text'=>'delete','icon_text'=>'delete','pos'=>'R'));

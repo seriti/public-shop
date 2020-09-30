@@ -33,6 +33,7 @@ class Config
 
         //NB: Also defined in Website/ConfigPublic
         define('MODULE_SHOP',$module);
+        define('MODULE_PAYMENT',$this->container->config->get('module','payment'));
         
         define('TABLE_PREFIX',$module['table_prefix']);
         if(!defined('CURRENCY_ID')) define('CURRENCY_ID','ZAR');

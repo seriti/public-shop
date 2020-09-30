@@ -12,7 +12,7 @@ $list_param['class'] = 'form-control edit_input';
   if(isset($data['user_id'])) {
       echo '<h2>Hi there <strong>'.$data['user_name'].'</strong>. you are logged in and ready to proceed with checkout process.</h2>';
   } else {
-      echo '<h2>If you are aready a user <a href="/login">please login</a> before you proceed.</h2>';
+      echo '<h2>If you are already a user <a href="/login">please login</a> before you proceed.</h2>';
       echo '<h2>If you are not a user then you can proceed and you will be registered automatically.</h2>';
   }
   ?>

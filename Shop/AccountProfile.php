@@ -41,7 +41,7 @@ class AccountProfile extends Record
         $this->addRecordCol(array('id'=>'bill_address','type'=>'TEXT','title'=>'Billing address','required'=>false));
         $this->addRecordCol(array('id'=>'ship_address','type'=>'TEXT','title'=>'Shipping address','required'=>false));
 
-        $this->addAction(array('type'=>'edit','text'=>'edit profile'));
+        $this->addAction(array('type'=>'edit','text'=>'Edit profile'));
        
     }    
 

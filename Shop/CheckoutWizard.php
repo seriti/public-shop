@@ -15,19 +15,32 @@ use Seriti\Tools\BASE_UPLOAD;
 use Seriti\Tools\UPLOAD_TEMP;
 use Seriti\Tools\UPLOAD_DOCS;
 use Seriti\Tools\TABLE_USER;
+use Seriti\Tools\SITE_NAME;
 
 use App\Shop\Helpers;
+
+use App\Payment\Helpers as PaymentHelpers;
+use App\Payment\Gateway;
 
 class CheckoutWizard extends Wizard 
 {
     protected $user;
     protected $temp_token;
     protected $user_id;
-    protected $table_prefix = MODULE_SHOP['table_prefix'];
+    protected $table_prefix;
+    protected $table_prefix_pmt;
     
     //configure
     public function setup($param = []) 
     {
+        $error = '';
+        if(!defined('MODULE_SHOP')) $error .= 'Shop module not defined. ';
+        if(!defined('MODULE_PAYMENT')) $error .= 'Payment module not defined. ';
+        if($error !== '')  throw new Exception('CONSTANT_NOT_DEFINED: '.$error);
+        
+        $this->table_prefix = MODULE_SHOP['table_prefix'];
+        $this->table_prefix_pmt = MODULE_PAYMENT['table_prefix'];
+
         $this->user = $this->getContainer('user');
         $this->temp_token = $this->user->getTempToken();
 
@@ -54,8 +67,8 @@ class CheckoutWizard extends Wizard
         $this->addPage(1,'Setup','shop/checkout_page1.php',['go_back'=>true]);
         $this->addPage(2,'Confirm totals','shop/checkout_page2.php');
         $this->addPage(3,'Delivery details','shop/checkout_page3.php');
-        $this->addPage(4,'Payment','shop/checkout_page4.php',['final'=>true]);  
-        
+        $this->addPage(4,'Payment','shop/checkout_page4.php',['final'=>true]);
+            
 
     }
 
@@ -64,8 +77,7 @@ class CheckoutWizard extends Wizard
         $error = '';
         $error_tmp = '';
 
-
-        //PROCESS create new user with public access
+        //process shipping and payment options
         if($this->page_no == 1) {
 
             
@@ -83,9 +95,17 @@ class CheckoutWizard extends Wizard
                 $this->data['ship_location'] = $this->db->readSqlValue($sql);
                 $sql = 'SELECT name FROM '.$this->table_prefix.'ship_option WHERE option_id = "'.$this->db->escapeSql($ship_option_id).'" ';
                 $this->data['ship_option'] = $this->db->readSqlValue($sql);
-                $sql = 'SELECT name,type_id,config FROM '.$this->table_prefix.'pay_option WHERE option_id = "'.$this->db->escapeSql($pay_option_id).'" ';
+                $sql = 'SELECT name,provider_code FROM '.$this->table_prefix.'pay_option WHERE option_id = "'.$this->db->escapeSql($pay_option_id).'" ';
                 $this->data['pay'] = $this->db->readSqlRecord($sql);
                 $this->data['pay_option'] = $this->data['pay']['name'];
+
+                $provider = PaymentHelpers::getProvider($this->db,$this->table_prefix_pmt,'CODE',$this->data['pay']['provider_code']);
+                if($provider == 0) {
+                    $this->addError('Payment provider not recognised');
+                } else {
+                    $this->data['pay']['type_id'] = $provider['type_id'];
+                    $this->data['pay']['provider_id'] = $provider['provider_id'];
+                }    
                 
                 $this->data['totals'] = $output['totals'];
                 $this->data['items'] = $output['items'];
@@ -94,12 +114,13 @@ class CheckoutWizard extends Wizard
 
         } 
         
-        //PROCESS additional info required
+        //process additional info required
         if($this->page_no == 2) {
-            
+
+
         }  
         
-        //address details and user register if not logged in
+        //process address details and user register if not logged in
         if($this->page_no == 3) {
             
             //check if an existing user has not logged in
@@ -137,7 +158,7 @@ class CheckoutWizard extends Wizard
                     $this->data['user_id'] = $user[$this->user_cols['id']];
                     //set user_id so wizard knows user created 
                     $this->user_id = $this->data['user_id'];
-
+                    
                     $mailer = $this->getContainer('mail');
                     $to = $email;
                     $from = ''; //default config email from used
@@ -200,44 +221,88 @@ class CheckoutWizard extends Wizard
                 $where = ['order_id' => $this->data['order_id']];
                 $this->db->updateRecord($table_order,$data,$where,$error_tmp);
                 if($error_tmp !== '') {
-                    $error = 'We could not update order details.';
+                    $error = 'We could not save order details.';
                     if($this->debug) $error .= $error_tmp;
                     $this->addError($error);
                 } 
             }
 
-            //finally redirect to payment gateway if that option reuested
             if(!$this->errors_found) {
-                if($this->data['pay']['type_id'] === 'EFT_TOKEN') {
+                $provider = PaymentHelpers::getProvider($this->db,$this->table_prefix_pmt,'CODE',$this->data['pay']['provider_code']);
+                if($provider == 0) $this->addError('Payment provider not recognised');
+            }    
+
+            //finally SETUP payment gateway form if that option requested, or email EFT instructions
+            if(!$this->errors_found) {
+                $gateway = new Gateway($this->db,$this->container);
+                $gateway->setup('SHOP',$provider['provider_id']);
+                
+                $reference = 'ORDER-'.$this->data['order_id'];
+                $reference_id =$this->data['order_id'];
+                $amount = $this->data['totals']['total'];
+
+                if($provider['type_id'] === 'EFT_TOKEN') {
+                    
                     //send user message with payment instructions
                     $param = ['cc_admin'=>true];
                     $subject = 'EFT Payment instructions';
-                    $message = 'Please use payment Reference: Order-'.$this->data['order_id'].'<br/>'.
+                    $message = 'Please use payment Reference: <strong>'.$reference.'</strong><br/>'.
+                               'Total amount due: <strong>'.CURRENCY_ID.number_format($amount,2).'</strong><br/>'. 
                                'We will ship your order once payment is received. <br/>'. 
-                               'Our bank account details:<br/>'.nl2br($this->data['pay']['config']);
+                               'Our bank account details:<br/>'.
+                               '<strong>'.nl2br($provider['config']).'</strong>';
 
                     Helpers::sendOrderMessage($this->db,$this->table_prefix,$this->container,$this->data['order_id'],$subject,$message,$param,$error_tmp);
                     if($error_tmp !== '') {
                         $message = 'We could not email you order details, but your order has been successfully processed. PLease check your account page for details.';
                         if($this->debug) $message .= $error_tmp;
                         $this->addMessage($message);
-                    } 
+                    } else {
+                        $provider_ref = 'NA';
+                        $gateway->saveTransaction($provider_ref,$reference,$reference_id,$amount,$this->data['user_email'],$error_tmp);
+                        //PaymentHelpers::saveEftTokenTransact($this->db,$this->table_prefix_pmt,$provider['provider_id'],'SHOP',$reference_id,$reference,$amount,$this->data['user_email']);
+                    }
                 }
 
-                if($this->data['pay']['type_id'] === 'GATEWAY_FORM') {
-                    //redirect based on json configuration
-                    $config = json_decode($this->data['pay']['config'],true);
-
-
+                if($provider['type_id'] === 'GATEWAY_FORM') {
+                    //NB: all kinds of wizardry happens here, transaction initialisesd, gateway initialised, form created at end.                    
+                    $gateway_form = $gateway->getGatewayForm($reference,$reference_id,$amount,$this->data['user_email'],$error_tmp);
+                    if($error_tmp !== '') {
+                        $error .= 'Could not setup payment gateway! Please try again later or select an alternative payment method.';
+                        if($this->debug) $error .= $error_tmp;
+                        $this->addError($error);
+                    } else {
+                        $this->data['gateway_form'] = $gateway_form;
+                    }
                 }
-            }    
-        }  
+            }
+               
+        } 
+
+        //final page so no fucking processing possible moron
+        if($this->page_no == 4) {
+
+            
+
+            
+
+            
+        } 
     }
 
     public function setupPageData($no)
     {
         //if($no == 3) {}
         
+
+        //NB: TEMP COOKIE CAN OUTLIVE USER LOGIN SESSION if did NOT select []remember me option
+        if($this->user_id == 0 and isset($this->data['user_id'])) {
+            unset($this->data['user_id']);
+            $this->saveData('data');
+        }
+
+
+
         //setup user data ONCE only, if a user is logged in
         if($this->user_id != 0 and !isset($this->data['user_id'])) {
             $this->data['user_id'] = $this->user_id;    

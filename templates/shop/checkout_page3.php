@@ -6,7 +6,21 @@ $list_param['class'] = 'form-control edit_input';
 $text_param['class'] = 'form-control edit_input';
 $textarea_param['class'] = 'form-control edit_input';
 
-$totals = $data['totals']
+$totals = $data['totals'];
+
+
+$button_text = 'Confirm delivery details';
+$user_created = false;
+
+if(!isset($data['user_id'])) {
+    $logged_in = false;
+    $button_text .= ' & Register as a user.';
+} else {
+    $logged_in = true;
+    //check if user was created in next step of wizard and stepped back or clicked breadcrumb
+    if(isset($data['user_created']) and $data['user_created']) $user_created = true;
+}  
+
 ?>
 
 <div id="checkout_div">
@@ -32,13 +46,12 @@ $totals = $data['totals']
     <div class="col-sm-3">Your email address:</div>
     <div class="col-sm-3">
       <?php 
-      if(isset($data['user_id'])) {
+      if($logged_in) {
           echo $data['user_email'];
-          if(isset($data['user_created']) and $data['user_created']) {
-             echo '</div><div class="col-sm-3"><i>You are now registered with us and logged in. You have been emailed your password.</i>';
-          }
+          if($user_created) echo '<br/><i>You are now registered with us and logged in. You have been emailed your password for future access.</i>';
       } else {
           echo Form::textInput('user_email',$form['user_email'],$text_param); 
+          echo '<i>You will be registered as a user with this address. If you are already a user click <a href="/login">here to login</a></i>';
       }    
       ?>
     </div>
@@ -80,7 +93,7 @@ $totals = $data['totals']
   </div>
 
   <div class="row">
-    <div class="col-sm-6"><input type="submit" name="Submit" value="Confirm Order" class="btn btn-primary"></div>
+    <div class="col-sm-6"><input type="submit" name="Submit" value="<?php echo $button_text ?>" class="btn btn-primary"></div>
   </div>  
 
 </div>

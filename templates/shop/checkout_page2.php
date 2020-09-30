@@ -11,15 +11,15 @@ $totals = $data['totals']
   
   <div class="row">
     <div class="col-sm-3">Ship to location:</div>
-    <div class="col-sm-3"><?php echo $data['ship_location']; ?></div>
+    <div class="col-sm-3"><strong><?php echo $data['ship_location']; ?></strong></div>
   </div>
   <div class="row">
     <div class="col-sm-3">Shipping option:</div>
-    <div class="col-sm-3"><?php echo $data['ship_option']; ?></div>
+    <div class="col-sm-3"><strong><?php echo $data['ship_option']; ?></strong></div>
   </div>
   <div class="row">
     <div class="col-sm-3">Payment option:</div>
-    <div class="col-sm-3"><?php echo $data['pay_option']; ?></div>
+    <div class="col-sm-3"><strong><?php echo $data['pay_option']; ?></strong></div>
   </div>
 
 

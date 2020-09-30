@@ -142,6 +142,7 @@ class SetupData extends SetupModuledata
                               `order_id` INT NOT NULL,
                               `date_create` DATETIME NOT NULL,
                               `amount` DECIMAL(12,2) NOT NULL,
+                              `comment` text NOT NULL,
                               `status` VARCHAR(64) NOT NULL,
                               PRIMARY KEY (`payment_id`)
                             ) ENGINE = MyISAM DEFAULT CHARSET=utf8');
@@ -149,9 +150,8 @@ class SetupData extends SetupModuledata
         $this->addCreateSql('pay_option',
                             'CREATE TABLE `TABLE_NAME` (
                               `option_id` INT NOT NULL AUTO_INCREMENT,
-                              `type_id` VARCHAR(250) NOT NULL,
                               `name` VARCHAR(250) NOT NULL,
-                              `config` TEXT NOT NULL,
+                              `provider_code` varchar(64) NOT NULL,
                               `sort` INT NOT NULL,
                               `status` VARCHAR(64) NOT NULL,
                               PRIMARY KEY (`option_id`)
@@ -242,8 +242,8 @@ class SetupData extends SetupModuledata
         $this->addInitialSql('INSERT INTO `TABLE_PREFIXtype` (name,sort,status) '.
                              'VALUES("Standard",1,"OK")','Created default product type');
 
-        $this->addInitialSql('INSERT INTO `TABLE_PREFIXpay_option` (type_id,name,config,sort,status) '.
-                             'VALUES("EFT_TOKEN","Manual EFT with token","Your bank account details","1","OK")','Created default payment option');
+        $this->addInitialSql('INSERT INTO `TABLE_PREFIXpay_option` (type_id,name,provider_code,sort,status) '.
+                             'VALUES("EFT_TOKEN","Manual EFT with token","BANK_XXX","1","OK")','Created default payment option');
 
         $this->addInitialSql('INSERT INTO `TABLE_PREFIXship_location` (name,sort,status) '.
                              'VALUES("South Africa","1","OK")','Created sample shipping location');
@@ -256,7 +256,7 @@ class SetupData extends SetupModuledata
         
         
         //updates use time stamp in ['YYYY-MM-DD HH:MM'] format, must be unique and sequential
-        //$this->addUpdateSql('YYYY-MM-DD HH:MM','Update TABLE_PREFIX--- SET --- "X"');
+        $this->addUpdateSql('2020-08-31 12:00','ALTER TABLE `TABLE_PREFIXpayment` ADD COLUMN `comment` TEXT NOT NULL AFTER `amount` ');
     }
 }
 

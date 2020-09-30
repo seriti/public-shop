@@ -76,8 +76,8 @@ class ProductList extends Listing
         //these are UNIVERSAL TO ALL PRODUCTS, CAN BE OVERWRITTEN IN INDIVIDUAL PRODUCT OPTIONS 
         //NB: custom settings'list' are simple non associative array(default)
         //NB: if 'list'=>[] then only shows custom settings
-        $this->addListAction('size',['type'=>'select','text'=>'Size:','list'=>[],'pos'=>'R']);
-        $this->addListAction('colour',['type'=>'select','text'=>'Colour:','list'=>[],'pos'=>'R']);
+        $this->addListAction('size',['type'=>'select','text'=>'Size:','list'=>[],'pos'=>'R','spacer'=>'<br/>']);
+        $this->addListAction('colour',['type'=>'select','text'=>'Colour:','list'=>[],'pos'=>'R','spacer'=>'<br/>']);
         //$this->addListAction('size',['type'=>'select','text'=>'Size:','list'=>[10,11,12],'pos'=>'R']);
         //$this->addListAction('colour',['type'=>'select','text'=>'Colour:','list'=>['red','green','blue'],'pos'=>'R']);
 
