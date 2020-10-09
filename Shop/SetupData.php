@@ -242,8 +242,8 @@ class SetupData extends SetupModuledata
         $this->addInitialSql('INSERT INTO `TABLE_PREFIXtype` (name,sort,status) '.
                              'VALUES("Standard",1,"OK")','Created default product type');
 
-        $this->addInitialSql('INSERT INTO `TABLE_PREFIXpay_option` (type_id,name,provider_code,sort,status) '.
-                             'VALUES("EFT_TOKEN","Manual EFT with token","BANK_XXX","1","OK")','Created default payment option');
+        $this->addInitialSql('INSERT INTO `TABLE_PREFIXpay_option` (name,provider_code,sort,status) '.
+                             'VALUES("Manual EFT with token","BANK_XXX","1","OK"),("DPO Paygate gateway","DPO_PAYGATE","2","OK")','Created default payment options');
 
         $this->addInitialSql('INSERT INTO `TABLE_PREFIXship_location` (name,sort,status) '.
                              'VALUES("South Africa","1","OK")','Created sample shipping location');
