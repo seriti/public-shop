@@ -186,6 +186,7 @@ class CheckoutWizard extends Wizard
 
                 $data = [];
                 $data['user_id'] = $this->user_id;
+                $data['name_invoice'] = $this->data['user_name'];
                 $data['cell'] = $this->form['user_cell'];
                 $data['ship_address'] = $this->form['user_ship_address'];
                 $data['bill_address'] = $this->form['user_bill_address'];

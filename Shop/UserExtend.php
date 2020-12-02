@@ -20,7 +20,8 @@ class UserExtend extends Table
 
         $this->addTableCol(array('id'=>'extend_id','type'=>'INTEGER','title'=>'Extend ID','key'=>true,'key_auto'=>true,'list'=>false));
         $this->addTableCol(array('id'=>'user_id','type'=>'INTEGER','title'=>'User','join'=>'CONCAT(name,": ",email) FROM '.TABLE_USER.' WHERE user_id'));
-        $this->addTableCol(array('id'=>'cell','type'=>'STRING','title'=>'Cellphone','required'=>false));
+        $this->addTableCol(array('id'=>'name_invoice','type'=>'STRING','title'=>'Invoice name','required'=>true));
+        $this->addTableCol(array('id'=>'cell','type'=>'STRING','title'=>'Cellphone','required'=>true));
         $this->addTableCol(array('id'=>'tel','type'=>'STRING','title'=>'Telephone','required'=>false));
         $this->addTableCol(array('id'=>'email_alt','type'=>'EMAIL','title'=>'Email alternative','required'=>false));
         $this->addTableCol(array('id'=>'bill_address','type'=>'TEXT','title'=>'Billing address','required'=>false));
