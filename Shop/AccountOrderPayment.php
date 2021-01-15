@@ -10,8 +10,10 @@ class AccountOrderPayment extends Table
     //configure
     public function setup($param = []) 
     {
-        $param = ['row_name'=>'Payment','col_label'=>'amount','pop_up'=>true];
-        parent::setup($param);        
+        if(isset($param['table_prefix'])) $this->table_prefix = $param['table_prefix'];
+
+        $table_param = ['row_name'=>'Payment','col_label'=>'amount','pop_up'=>true];
+        parent::setup($table_param);        
                        
         //NB: specify master table relationship
         $this->setupMaster(array('table'=>$this->table_prefix.'order','key'=>'order_id','child_col'=>'order_id', 

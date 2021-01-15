@@ -40,7 +40,9 @@ class Config
         if(!defined('CURRENCY_SYMBOL')) define('CURRENCY_SYMBOL','R');
 
         //NB: If S3 access = PUBLIC/PRIVATE
-        define('IMAGE_ACCESS',$module['images']['access']);
+        //define('IMAGE_ACCESS',$module['images']['access']);
+        //defines access and resize parameters
+        define('IMAGE_CONFIG',$module['images']);
                 
         define('MODULE_ID','SHOP');
         define('MODULE_LOGO','<span class="glyphicon glyphicon-shopping-cart"></span> ');

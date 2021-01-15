@@ -17,7 +17,10 @@ class AccountProfileController
     {
         $user = $this->container->user;
         
-        $table_name = MODULE_SHOP['table_prefix'].'user_extend'; 
+        //NB: TABLE_PREFIX constant not applicable as not called within admin module
+        $table_prefix = MODULE_SHOP['table_prefix'];
+
+        $table_name = $table_prefix.'user_extend'; 
         $record = new AccountProfile($this->container->mysql,$this->container,$table_name);
 
         $param = [];

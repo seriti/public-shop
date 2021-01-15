@@ -53,7 +53,7 @@ class Product extends Table
         
         $this->setupImages(array('table'=>TABLE_PREFIX.'file','location'=>'PRD','max_no'=>10,
                                   'icon'=>'<span class="glyphicon glyphicon-picture" aria-hidden="true"></span>&nbsp;manage',
-                                  'list'=>true,'list_no'=>1,'storage'=>STORAGE,'access'=>IMAGE_ACCESS,
+                                  'list'=>true,'list_no'=>1,'storage'=>STORAGE,'access'=>IMAGE_CONFIG['access'],
                                   'link_url'=>'product_image','link_data'=>'SIMPLE','width'=>'700','height'=>'600'));
                                   
     }
