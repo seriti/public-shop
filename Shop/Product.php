@@ -40,7 +40,7 @@ class Product extends Table
         $this->addAction(array('type'=>'edit','text'=>'edit','icon_text'=>'edit'));
         $this->addAction(array('type'=>'delete','text'=>'delete','icon_text'=>'delete','pos'=>'R'));
 
-        $sql_cat = 'SELECT id,CONCAT(IF(level > 1,REPEAT("--",level - 1),""),title) FROM '.TABLE_PREFIX.'category  ORDER BY rank';
+        $sql_cat = 'SELECT id,CONCAT(IF(`level` > 1,REPEAT("--",`level` - 1),""),title) FROM '.TABLE_PREFIX.'category  ORDER BY `rank`';
         $this->addSelect('category_id',$sql_cat);
         $sql_status = '(SELECT "NEW") UNION (SELECT "OK") UNION (SELECT "HIDE")';
         $this->addSelect('status',$sql_status);

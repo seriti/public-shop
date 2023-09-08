@@ -81,7 +81,7 @@ class ProductList extends Listing
         //$this->addListAction('size',['type'=>'select','text'=>'Size:','list'=>[10,11,12],'pos'=>'R']);
         //$this->addListAction('colour',['type'=>'select','text'=>'Colour:','list'=>['red','green','blue'],'pos'=>'R']);
 
-        $sql_cat = 'SELECT id,CONCAT(IF(level > 1,REPEAT("--",level - 1),""),title) FROM '.$this->table_prefix.'category  ORDER BY rank';
+        $sql_cat = 'SELECT id,CONCAT(IF(`level` > 1,REPEAT("--",`level` - 1),""),title) FROM '.$this->table_prefix.'category  ORDER BY `rank`';
         $this->addSelect('category_id',$sql_cat);
         
         $this->addSearch(array('name','description','category_id'),array('rows'=>2));

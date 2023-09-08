@@ -302,8 +302,6 @@ class CheckoutWizard extends Wizard
             $this->saveData('data');
         }
 
-
-
         //setup user data ONCE only, if a user is logged in
         if($this->user_id != 0 and !isset($this->data['user_id'])) {
             $this->data['user_id'] = $this->user_id;    
